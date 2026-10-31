@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LUCKY SHOP - Mega Lucky Wheel Spin</title>
+
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <!-- Firebase Compat SDKs (Project: bot-tg-f10a6) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+    <!-- Google Fonts & FontAwesome 6 Pro CDN -->
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-yellow: #f5b700;
+            --primary-dark-yellow: #d97706;
+            --header-gradient: linear-gradient(180deg, #ffb703 0%, #fb8500 100%);
+            --gold-gradient: linear-gradient(135deg, #ffe066 0%, #f59e0b 50%, #b45309 100%);
+            --spin-btn-gradient: linear-gradient(180deg, #ffdd00 0%, #f59e0b 50%, #d97706 100%);
+            --bg-night: #080c14;
+            --card-surface: #101624;
+            --border-glow: #24324a;
+            --green: #2ecc71;
+            --red: #ef4444;
+            --shadow-gold: 0 0 30px rgba(245, 183, 0, 0.45);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', 'Hind Siliguri', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            background-color: #03060a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .app-wrapper {
+            width: 100%;
+            max-width: 480px;
+            min-height: 100vh;
+            background: radial-gradient(circle at top, #141c2c 0%, #080c14 70%);
+            position: relative;
+            box-shadow: 0 0 60px rgba(0,0,0,0.95);
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: 85px;
+        }
+
+        /* Top Bar */
+        .lottery-top-bar {
+            background: rgba(16, 22, 36, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border-glow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .lottery-brand-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .lottery-brand-badge h3 {
+            font-size: 17px;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: 0.5px;
+        }
+        .lottery-brand-badge span {
+            color: var(--primary-yellow);
+        }
+        .lottery-balance-chip {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border: 1.5px solid #2a374d;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 13.5px;
+            color: #2ed573;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* ================= 1. TOP ACTION DOCK WITH SIDE LIMIT BOX ================= */
+        .top-action-dock {
+            margin: 14px 16px 8px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Big Buy Lottery Button Placed on Top */
+        .btn-top-buy-lottery {
+            width: 100%;
+            padding: 14px 20px;
+            background: var(--gold-gradient);
+            border: none;
+            border-radius: 18px;
+            color: #111;
+            font-size: 15.5px;
+            font-weight: 900;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 6px 20px rgba(245, 183, 0, 0.35);
+            transition: transform 0.15s;
+        }
+        .btn-top-buy-lottery:active {
+            transform: scale(0.97);
+        }
+        .btn-top-buy-lottery .badge-ticket-rate {
+            background: rgba(0,0,0,0.75);
+            color: #ffeb3b;
+            font-size: 11.5px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 800;
+        }
+
+        /* Status Bar with Beautiful Side Spin Limit Box */
+        .spin-status-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: stretch;
+        }
+        .spin-notice-pill {
+            flex: 1;
+            background: #111726;
+            border: 1.5px solid #1f2b40;
+            border-radius: 16px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .spin-notice-pill i {
+            font-size: 20px;
+            color: var(--primary-yellow);
+        }
+        .spin-notice-pill .text-box h5 {
+            font-size: 12.5px;
+            font-weight: 800;
+            color: #fff;
+        }
+        .spin-notice-pill .text-box p {
+            font-size: 10.5px;
+            color: #8c99ab;
+        }
+
+        /* The Special Side Limit Box requested by user */
+        .side-spin-limit-box {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1.5px solid var(--primary-yellow);
+            border-radius: 16px;
+            padding: 10px 16px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: 0 0 15px rgba(245, 183, 0, 0.25);
+            min-width: 105px;
+        }
+        .side-spin-limit-box span {
+            font-size: 10px;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+        }
+        .side-spin-limit-box strong {
+            font-size: 20px;
+            font-weight: 900;
+            color: var(--primary-yellow);
+            letter-spacing: -0.5px;
+        }
+
+        /* ================= 2. CASINO WHEEL SPINNER SECTION ================= */
+        .spinner-stage {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 0 12px 0;
+            position: relative;
+        }
+
+        .wheel-halo-ring {
+            position: relative;
+            width: 324px;
+            height: 324px;
+            border-radius: 50%;
+            padding: 9px;
+            background: radial-gradient(circle, #ffe066 0%, #d97706 70%, #78350f 100%);
+            box-shadow: 0 0 35px rgba(245, 183, 0, 0.4), inset 0 0 15px rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Blinking LED Bulbs Around Rim */
+        .led-dot {
+            position: absolute;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #ffffff;
+            box-shadow: 0 0 8px #ffffff;
+            animation: ledBlink 1s infinite alternate;
+        }
+        @keyframes ledBlink {
+            0% { opacity: 0.3; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1.1); box-shadow: 0 0 10px #ffeb3b; }
+        }
+
+        /* 3D Top Needle Indicator Fixed at Exact Top (12 o'clock) */
+        .wheel-needle-top {
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 36px;
+            height: 46px;
+            z-index: 60;
+            filter: drop-shadow(0 6px 10px rgba(0,0,0,0.85));
+            pointer-events: none;
+        }
+
+        /* Wheel Canvas */
+        #wheelCanvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            transition: transform 5.2s cubic-bezier(0.12, 0.8, 0.3, 1);
+        }
+
+        /* Center Gem Badge */
+        .wheel-center-gem {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #1e293b 0%, #080c14 100%);
+            border: 3.5px solid #f5b700;
+            color: #f5b700;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 40;
+            box-shadow: 0 0 18px rgba(0,0,0,0.9), inset 0 0 8px rgba(245, 183, 0, 0.5);
+            pointer-events: none;
+        }
+
+        /* ================= 3. GIANT BOTTOM SPIN BUTTON ================= */
+        .bottom-spin-controls {
+            padding: 4px 18px 14px 18px;
+        }
+
+        .btn-giant-spin {
+            width: 100%;
+            padding: 16px;
+            background: var(--spin-btn-gradient);
+            border: none;
+            border-radius: 20px;
+            color: #111;
+            font-size: 18px;
+            font-weight: 900;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 8px 30px rgba(245, 183, 0, 0.45);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.15s;
+        }
+        .btn-giant-spin:active {
+            transform: scale(0.97);
+        }
+        .btn-giant-spin.spinning-active {
+            opacity: 0.65;
+            cursor: not-allowed;
+            filter: grayscale(0.4);
+            transform: none;
+        }
+        .btn-giant-spin::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(60deg, transparent, rgba(255,255,255,0.35), transparent);
+            transform: rotate(30deg);
+            animation: lightSweep 2.8s infinite;
+        }
+        @keyframes lightSweep {
+            0% { transform: translateX(-100%) rotate(30deg); }
+            100% { transform: translateX(100%) rotate(30deg); }
+        }
+
+        /* Winners Live Ticker */
+        .live-winners-strip {
+            margin: 0 16px;
+            background: rgba(16, 22, 36, 0.65);
+            border: 1px solid var(--border-glow);
+            border-radius: 12px;
+            padding: 8px 12px;
+            font-size: 11.5px;
+            color: #8c99ab;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .live-winners-strip strong {
+            color: #2ed573;
+        }
+
+        /* ================= 4. MODALS & POPUPS ================= */
+        .modal-screen-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.82);
+            backdrop-filter: blur(6px);
+            z-index: 10000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .modal-box-card {
+            background: #111726;
+            border: 1.5px solid #233148;
+            width: 100%;
+            max-width: 400px;
+            border-radius: 24px;
+            padding: 22px;
+            color: #fff;
+            position: relative;
+            box-shadow: 0 15px 45px rgba(0,0,0,0.8);
+            animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn {
+            from { transform: scale(0.85); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-head-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .modal-head-line h3 {
+            font-size: 16px;
+            font-weight: 800;
+            color: #fff;
+        }
+        .btn-modal-close {
+            font-size: 22px;
+            color: #8c99ab;
+            cursor: pointer;
+        }
+
+        /* Quantity Step Selector */
+        .qty-stepper-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 16px 0;
+        }
+        .btn-step-circle {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: #1b2436;
+            border: 1.5px solid #2f3e58;
+            color: #fff;
+            font-size: 20px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .stepper-input {
+            flex: 1;
+            height: 44px;
+            background: #090d16;
+            border: 1.5px solid #2f3e58;
+            border-radius: 12px;
+            text-align: center;
+            color: var(--primary-yellow);
+            font-size: 18px;
+            font-weight: 900;
+            outline: none;
+        }
+
+        .btn-confirm-buy {
+            width: 100%;
+            padding: 13px;
+            background: var(--gold-gradient);
+            border: none;
+            border-radius: 14px;
+            color: #111;
+            font-size: 15px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(245, 183, 0, 0.35);
+        }
+
+        /* Reward Result Celebration Modal (Guaranteed 100% Match) */
+        .reward-result-card {
+            text-align: center;
+            padding: 10px 0;
+        }
+        .reward-animated-icon {
+            font-size: 58px;
+            margin-bottom: 8px;
+            display: inline-block;
+            animation: bounceIn 0.5s ease;
+        }
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .reward-amount-display {
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            margin: 6px 0 10px 0;
+        }
+        .reward-message-sub {
+            font-size: 12.5px;
+            color: #94a3b8;
+            line-height: 1.45;
+            margin-bottom: 18px;
+        }
+
+        /* Canvas Confetti Layer */
+        #confettiCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 99999;
+        }
+
+        /* Toast */
+        #appToast {
+            position: fixed;
+            top: -90px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 420px;
+            background: #18202c;
+            color: #ffffff;
+            border-radius: 12px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 100000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            border-left: 5px solid var(--primary-yellow);
+            transition: all 0.35s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            font-size: 13.5px;
+        }
+        #appToast.show { top: 15px; }
+
+        /* Bottom White Navigation Bar (Glowing on Lottery) */
+        .app-bottom-navbar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            max-width: 480px;
+            height: 65px;
+            background: #ffffff;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid #e2e8f0;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+            z-index: 999;
+        }
+        .nav-item-tab {
+            flex: 1;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+        .nav-item-tab i { font-size: 19px; }
+        .nav-item-tab.active {
+            color: var(--primary-dark-yellow);
+            font-weight: 800;
+        }
+        .nav-item-tab.active i {
+            transform: translateY(-2px);
+            text-shadow: 0 0 12px rgba(245, 183, 0, 0.7);
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-wrapper">
+
+    <!-- Confetti Particle Canvas for Big Wins -->
+    <canvas id="confettiCanvas"></canvas>
+
+    <!-- Global Toast Notification -->
+    <div id="appToast">
+        <i class="fa-solid fa-circle-check" id="toastIcon" style="color:var(--primary-yellow); font-size:18px;"></i>
+        <span id="toastMsg">বিজ্ঞপ্তি বার্তা</span>
+    </div>
+
+    <!-- Top Bar -->
+    <div class="lottery-top-bar">
+        <div class="lottery-brand-badge">
+            <i class="fa-solid fa-crown" style="color:var(--primary-yellow); font-size:22px;"></i>
+            <h3>LUCKY <span>SPIN</span></h3>
+        </div>
+        <div class="lottery-balance-chip">
+            <i class="fa-solid fa-wallet"></i>
+            ৳ <span id="userBalanceDisplay">0.00</span>
+        </div>
+    </div>
+
+    <!-- ================= 1. TOP BUY LOTTERY & SIDE LIMIT BOX ================= -->
+    <div class="top-action-dock">
+        <!-- Prominent Buy Lottery Button on Top -->
+        <button class="btn-top-buy-lottery" onclick="openBuySpinsModal()">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <i class="fa-solid fa-ticket" style="font-size:20px;"></i>
+                <span>বাই লটারি (Buy Spins)</span>
+            </div>
+            <span class="badge-ticket-rate">১ স্পিন = ১০ ৳</span>
+        </button>
+
+        <!-- Status Bar with Side Spin Limit Box -->
+        <div class="spin-status-wrapper">
+            <div class="spin-notice-pill">
+                <i class="fa-solid fa-gift"></i>
+                <div class="text-box">
+                    <h5 id="spinStatusHeadline">ভেরিফিকেশন স্পিন বোনাস</h5>
+                    <p id="spinStatusSubtitle">ভেরিফাই করলেই ১টি ফ্রি স্পিন দেওয়া হয়</p>
+                </div>
+            </div>
+
+            <!-- Beautiful Side Spin Limit Box requested by user -->
+            <div class="side-spin-limit-box">
+                <span>স্পিন লিমিট</span>
+                <strong id="sideLimitDisplay">0 টি</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 2. CASINO WHEEL SPINNER SECTION ================= -->
+    <div class="spinner-stage">
+        <div class="wheel-halo-ring" id="wheelHaloRing">
+            <!-- 3D Gold Top Needle Indicator (Exact 12 o'clock / -90 deg) -->
+            <svg class="wheel-needle-top" viewBox="0 0 36 46" fill="none">
+                <path d="M18 46L0 14C0 6.26801 8.05887 0 18 0C27.9411 0 36 6.26801 36 14L18 46Z" fill="#ff4757"/>
+                <circle cx="18" cy="14" r="6" fill="#ffd700"/>
+            </svg>
+
+            <!-- Wheel Canvas -->
+            <canvas id="wheelCanvas" width="520" height="520"></canvas>
+
+            <!-- Center Jewel Badge -->
+            <div class="wheel-center-gem">
+                <i class="fa-solid fa-star"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 3. BOTTOM SPIN BUTTON ================= -->
+    <div class="bottom-spin-controls">
+        <button id="btnGiantSpin" class="btn-giant-spin" onclick="triggerSpinWheel()">
+            <i class="fa-solid fa-rotate"></i>
+            <span>স্পিন করুন (SPIN NOW)</span>
+        </button>
+    </div>
+
+    <!-- Live Winners Ticker -->
+    <div class="live-winners-strip">
+        <i class="fa-solid fa-trophy" style="color:var(--primary-yellow);"></i>
+        <div style="flex:1; white-space:nowrap; overflow:hidden;" id="liveWinnerTickerText">
+            Member <strong>018***491</strong> won <strong>৳ ১০.০০</strong> in Lucky Wheel!
+        </div>
+    </div>
+
+    <!-- ================= 4. WHITE BOTTOM NAVIGATION BAR ================= -->
+    <div class="app-bottom-navbar">
+        <a href="index.html" class="nav-item-tab">
+            <i class="fa-solid fa-house"></i>
+            <span>Home</span>
+        </a>
+        <a href="index.html" class="nav-item-tab">
+            <i class="fa-solid fa-bag-shopping"></i>
+            <span>Shop</span>
+        </a>
+        <div class="nav-item-tab active">
+            <i class="fa-solid fa-dice"></i>
+            <span>Lottery</span>
+        </div>
+        <a href="refer.html" class="nav-item-tab">
+            <i class="fa-solid fa-users"></i>
+            <span>Refer</span>
+        </a>
+        <a href="index.html" class="nav-item-tab">
+            <i class="fa-solid fa-user"></i>
+            <span>Profile</span>
+        </a>
+    </div>
+
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODALS -->
+<!-- ========================================================================= -->
+
+<!-- 1. BUY SPINS MODAL -->
+<div id="modalBuySpins" class="modal-screen-overlay">
+    <div class="modal-box-card">
+        <div class="modal-head-line">
+            <h3><i class="fa-solid fa-ticket" style="color:var(--primary-yellow);"></i> লটারি স্পিন কিনুন</h3>
+            <span class="btn-modal-close" onclick="closeModalWindow('modalBuySpins')">&times;</span>
+        </div>
+        <div style="background:#172033; padding:12px; border-radius:12px; margin-bottom:12px; font-size:12px; color:#94a3b8; line-height:1.45;">
+            প্রতিটি স্পিনের মূল্য <b>১০ ৳</b>। আপনার মূল অ্যাকাউন্ট ব্যালেন্স থেকে টাকা কেটে সাথে সাথে স্পিন যুক্ত হবে।
+        </div>
+        
+        <div style="font-size:12.5px; font-weight:700; color:#cbd5e1; margin-bottom:6px;">স্পিনের সংখ্যা নির্বাচন করুন:</div>
+        <div class="qty-stepper-row">
+            <button class="btn-step-circle" onclick="adjustBuyQty(-1)">-</button>
+            <input type="number" id="buySpinsInput" class="stepper-input" value="1" min="1" max="100" oninput="calculateBuyCostLive()">
+            <button class="btn-step-circle" onclick="adjustBuyQty(1)">+</button>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; font-size:13.5px; font-weight:800; margin:14px 0 16px 0; color:#cbd5e1;">
+            <span>মোট খরচ:</span>
+            <span id="buyTotalCostDisplay" style="color:var(--primary-yellow); font-size:16px;">১০ ৳</span>
+        </div>
+
+        <button class="btn-confirm-buy" onclick="handleConfirmPurchaseSpins()">কনফার্ম করুন (Buy Now)</button>
+    </div>
+</div>
+
+<!-- 2. REWARD RESULT CELEBRATION MODAL (100% MATCHED WITH WHEEL STOP) -->
+<div id="modalRewardResult" class="modal-screen-overlay">
+    <div class="modal-box-card">
+        <div class="reward-result-card">
+            <div class="reward-animated-icon" id="rewardIconDisplay">🎉</div>
+            <h3 id="rewardHeadlineText" style="font-size:18px; font-weight:900; color:#fff;">অভিনন্দন!</h3>
+            <div class="reward-amount-display" id="rewardValueDisplay">+ ৳ ১০.০০</div>
+            <p class="reward-message-sub" id="rewardSubMessageText">
+                পুরস্কারের অর্থ সরাসরি আপনার মূল ওয়ালেটে যোগ করা হয়েছে।
+            </p>
+            <button class="btn-confirm-buy" onclick="closeRewardModal()">ঠিক আছে (Collect)</button>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- JAVASCRIPT MASTER ENGINE -->
+<!-- ========================================================================= -->
+<script>
+    // 1. Firebase Database Configuration (Project: bot-tg-f10a6)
+    const firebaseConfig = {
+        apiKey: "AIzaSyAkRYWD1Y3igOFeMrumv1IsPbHn9g4JSdM",
+        authDomain: "bot-tg-f10a6.firebaseapp.com",
+        databaseURL: "https://bot-tg-f10a6-default-rtdb.firebaseio.com",
+        projectId: "bot-tg-f10a6",
+        storageBucket: "bot-tg-f10a6.firebasestorage.app",
+        messagingSenderId: "140000103486",
+        appId: "1:140000103486:web:75226f27da9494ae21156f",
+        measurementId: "G-17KB6LXL0"
+    };
+
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const rtdb = firebase.database();
+
+    // 2. Telegram WebApp Engine
+    const tg = window.Telegram?.WebApp;
+    if (tg) { tg.expand(); tg.ready(); }
+
+    // 3. User State
+    let activeUser = {
+        uid: "1721397",
+        name: "LUCKY_USER",
+        balance: 0.00,
+        isVerified: false,
+        freeSpins: 0
+    };
+
+    let isWheelSpinning = false;
+    let accumulatedWheelDegree = 0;
+
+    // 4. Casino Wheel Segments Configuration (Exact 8 Slices starting from 12 o'clock)
+    // Slices 0 to 7:
+    const wheelSegments = [
+        { label: "10 ৳", color: "#162032", textColor: "#ffd700", type: "cash", value: 10 },
+        { label: "50 ৳", color: "#0d131f", textColor: "#ffffff", type: "cash", value: 50 },
+        { label: "Return", color: "#1d4ed8", textColor: "#ffffff", type: "return", value: 0 },
+        { label: "Try Again", color: "#be123c", textColor: "#ffffff", type: "zero", value: 0 },
+        { label: "100 ৳", color: "#162032", textColor: "#ffd700", type: "cash", value: 100 },
+        { label: "10 ৳", color: "#0d131f", textColor: "#2ecc71", type: "cash", value: 10 },
+        { label: "500 ৳", color: "#b45309", textColor: "#ffffff", type: "cash", value: 500 },
+        { label: "Return", color: "#1d4ed8", textColor: "#ffffff", type: "return", value: 0 }
+    ];
+
+    const totalSegments = wheelSegments.length; // 8
+    const sliceAngleDeg = 360 / totalSegments; // 45 degrees
+    const sliceAngleRad = (2 * Math.PI) / totalSegments;
+
+    const canvas = document.getElementById("wheelCanvas");
+    const ctx = canvas.getContext("2d");
+
+    // 5. Mathematically Precise Wheel Drawing (Starts from 12 o'clock = -Math.PI / 2)
+    function renderCasinoWheel() {
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const radius = centerX - 12;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (let i = 0; i < totalSegments; i++) {
+            // Offset by -Math.PI / 2 so segment 0 starts at 12 o'clock (under the needle!)
+            const startAngle = -Math.PI / 2 + i * sliceAngleRad;
+            const endAngle = startAngle + sliceAngleRad;
+
+            // Draw Wedge
+            ctx.beginPath();
+            ctx.fillStyle = wheelSegments[i].color;
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+            ctx.lineTo(centerX, centerY);
+            ctx.fill();
+
+            // Golden Border Line
+            ctx.strokeStyle = "rgba(245, 183, 0, 0.8)";
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Draw Slice Label Text (Rotated towards the rim)
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(startAngle + sliceAngleRad / 2);
+            ctx.textAlign = "right";
+            ctx.fillStyle = wheelSegments[i].textColor;
+            ctx.font = "bold 23px 'Poppins', 'Hind Siliguri'";
+            ctx.shadowColor = "rgba(0,0,0,0.8)";
+            ctx.shadowBlur = 6;
+            ctx.fillText(wheelSegments[i].label, radius - 35, 8);
+            ctx.restore();
+        }
+    }
+
+    // Generate Decorative LEDs around Halo Rim
+    function setupRimLEDs() {
+        const ring = document.getElementById("wheelHaloRing");
+        const totalLeds = 20;
+        const radius = 156;
+
+        for (let i = 0; i < totalLeds; i++) {
+            const angle = (i * 2 * Math.PI) / totalLeds;
+            const x = 162 + radius * Math.cos(angle) - 3.5;
+            const y = 162 + radius * Math.sin(angle) - 3.5;
+
+            const dot = document.createElement("div");
+            dot.className = "led-dot";
+            dot.style.left = `${x}px`;
+            dot.style.top = `${y}px`;
+            dot.style.animationDelay = `${(i * 0.1).toFixed(2)}s`;
+            ring.appendChild(dot);
+        }
+    }
+
+    // 6. Startup Lifecycle & Realtime Sync
+    window.addEventListener("DOMContentLoaded", () => {
+        renderCasinoWheel();
+        setupRimLEDs();
+
+        if (tg?.initDataUnsafe?.user) {
+            const u = tg.initDataUnsafe.user;
+            activeUser.uid = String(u.id);
+            activeUser.name = u.first_name + (u.last_name ? " " + u.last_name : "");
+        }
+
+        // Attach Realtime Listener to User profile in Firebase
+        rtdb.ref("users/" + activeUser.uid).on("value", (snap) => {
+            if (snap.exists()) {
+                const data = snap.val();
+                activeUser.balance = parseFloat(data.balance || 0);
+                activeUser.isVerified = data.isVerified || false;
+                activeUser.freeSpins = parseInt(data.freeSpins || 0);
+
+                document.getElementById("userBalanceDisplay").innerText = activeUser.balance.toFixed(2);
+                
+                // Update Both Limit Displays
+                document.getElementById("sideLimitDisplay").innerText = `${activeUser.freeSpins} টি`;
+
+                if (activeUser.isVerified) {
+                    document.getElementById("spinStatusHeadline").innerText = "ভেরিফাইড অ্যাকাউন্ট";
+                    document.getElementById("spinStatusSubtitle").innerText = `আপনার স্পিন লিমিট: ${activeUser.freeSpins} টি বাকি`;
+                } else {
+                    document.getElementById("spinStatusHeadline").innerText = "অ্যাকাউন্ট আনভেরিফাইড!";
+                    document.getElementById("spinStatusSubtitle").innerText = "ফ্রি স্পিন পেতে প্রোফাইল থেকে ভেরিফাই করুন";
+                }
+            }
+        });
+
+        // Simulated Winner Ticker
+        setInterval(cycleWinnerTicker, 4500);
+    });
+
+    function showToast(msg, isError = false) {
+        const toast = document.getElementById("appToast");
+        document.getElementById("toastMsg").innerText = msg;
+        const icon = document.getElementById("toastIcon");
+        icon.className = isError ? "fa-solid fa-triangle-exclamation" : "fa-solid fa-circle-check";
+        icon.style.color = isError ? "#e74c3c" : "#2ecc71";
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 3500);
+    }
+
+    function openModalWindow(id) { document.getElementById(id).style.display = "flex"; }
+    function closeModalWindow(id) { document.getElementById(id).style.display = "none"; }
+
+    function openBuySpinsModal() {
+        calculateBuyCostLive();
+        openModalWindow("modalBuySpins");
+    }
+
+    // 7. Buy Spins Controls (1 Spin = 10 Tk, Cuts from Wallet Balance)
+    function adjustBuyQty(delta) {
+        const input = document.getElementById("buySpinsInput");
+        let current = parseInt(input.value) || 1;
+        current = Math.max(1, Math.min(100, current + delta));
+        input.value = current;
+        calculateBuyCostLive();
+    }
+
+    function calculateBuyCostLive() {
+        const input = document.getElementById("buySpinsInput");
+        let qty = parseInt(input.value) || 1;
+        const cost = qty * 10;
+        document.getElementById("buyTotalCostDisplay").innerText = `${cost} ৳`;
+    }
+
+    function handleConfirmPurchaseSpins() {
+        if (!activeUser.isVerified) {
+            showToast("স্পিন কিনতে আগে আপনার অ্যাকাউন্ট ভেরিফাই করুন!", true);
+            closeModalWindow("modalBuySpins");
+            return;
+        }
+
+        const input = document.getElementById("buySpinsInput");
+        const qty = parseInt(input.value) || 1;
+        const totalCost = qty * 10;
+
+        if (activeUser.balance < totalCost) {
+            showToast(`পর্যাপ্ত ব্যালেন্স নেই! ${qty} টি স্পিনের জন্য ${totalCost} ৳ লাগবে। আগে ডিপোজিট করুন।`, true);
+            return;
+        }
+
+        const newBalance = activeUser.balance - totalCost;
+        const newSpins = (activeUser.freeSpins || 0) + qty;
+
+        const updates = {};
+        updates["/users/" + activeUser.uid + "/balance"] = newBalance;
+        updates["/users/" + activeUser.uid + "/freeSpins"] = newSpins;
+
+        const txKey = rtdb.ref("transactions").push().key;
+        updates["/transactions/" + txKey] = {
+            fromUID: activeUser.uid,
+            toUID: "LUCKY_SPIN_SHOP",
+            amount: totalCost,
+            type: "Buy Spins",
+            timestamp: Date.now()
+        };
+
+        rtdb.ref().update(updates).then(() => {
+            closeModalWindow("modalBuySpins");
+            showToast(`সফল হয়েছে! ${qty} টি স্পিন কেনা সম্পন্ন হয়েছে।`);
+        });
+    }
+
+    // 8. 100% Mathematically Calibrated Controlled Spin Engine
+    function triggerSpinWheel() {
+        if (isWheelSpinning) return;
+
+        // 1. Verification Check
+        if (!activeUser.isVerified) {
+            showToast("স্পিন করতে আগে প্রোফাইল থেকে অ্যাকাউন্ট ভেরিফাই করুন!", true);
+            return;
+        }
+
+        // 2. Available Spins Limit Check
+        if (activeUser.freeSpins <= 0) {
+            showToast("আপনার কোনো স্পিন লিমিট বাকি নেই! উপরে 'বাই লটারি' থেকে স্পিন কিনুন।", true);
+            openBuySpinsModal();
+            return;
+        }
+
+        isWheelSpinning = true;
+        const spinBtn = document.getElementById("btnGiantSpin");
+        spinBtn.classList.add("spinning-active");
+
+        // Controlled Rigged Probabilities (Safe for Admin):
+        // Index 0: 10৳ (40% chance)
+        // Index 5: 10৳ (30% chance)
+        // Index 2 or 7: Return Spin (25% chance)
+        // Index 3: Try Again (5% chance)
+        // 50৳, 100৳, 500৳: 0% chance (Protected)
+        const rand = Math.random() * 100;
+        let chosenIndex = 0;
+
+        if (rand < 40) {
+            chosenIndex = 0; // 10 Tk
+        } else if (rand < 70) {
+            chosenIndex = 5; // 10 Tk
+        } else if (rand < 95) {
+            chosenIndex = (Math.random() > 0.5) ? 2 : 7; // Return Spin
+        } else {
+            chosenIndex = 3; // Try Again (Zero)
+        }
+
+        // =========================================================================
+        // EXACT MATHEMATICAL ANGLE ALIGNMENT
+        // Segment i starts at (-90° + i * 45°). Its center is at (-90° + i * 45° + 22.5°).
+        // Needle is fixed at Top = -90° (12 o'clock).
+        // To bring segment i's center under top needle, required rotation angle modulo 360:
+        // targetBase = (360 - (i * 45 + 22.5)) % 360
+        // =========================================================================
+        const targetBaseAngle = (360 - (chosenIndex * sliceAngleDeg + 22.5)) % 360;
+        const currentBaseAngle = accumulatedWheelDegree % 360;
+        
+        let delta = (targetBaseAngle - currentBaseAngle) % 360;
+        if (delta < 0) delta += 360;
+
+        const extraFullSpins = 360 * 7; // 7 Full rotations for great suspense
+        const totalSpinDegree = extraFullSpins + delta;
+
+        accumulatedWheelDegree += totalSpinDegree;
+        canvas.style.transform = `rotate(${accumulatedWheelDegree}deg)`;
+
+        // Handle Result when Wheel Completely Stops (5.2s transition)
+        setTimeout(() => {
+            isWheelSpinning = false;
+            spinBtn.classList.remove("spinning-active");
+            displayRewardResult(wheelSegments[chosenIndex]);
+        }, 5200);
+    }
+
+    // 9. Display Result Modal (Guaranteed 100% Match with Wheel Stop)
+    function displayRewardResult(prize) {
+        const iconElem = document.getElementById("rewardIconDisplay");
+        const headElem = document.getElementById("rewardHeadlineText");
+        const valElem = document.getElementById("rewardValueDisplay");
+        const msgElem = document.getElementById("rewardSubMessageText");
+
+        if (prize.type === "cash") {
+            // Deduct 1 spin, add cash reward to profile balance
+            const newBalance = activeUser.balance + prize.value;
+            const newSpins = activeUser.freeSpins - 1;
+
+            const updates = {};
+            updates["/users/" + activeUser.uid + "/balance"] = newBalance;
+            updates["/users/" + activeUser.uid + "/freeSpins"] = newSpins;
+
+            const txKey = rtdb.ref("transactions").push().key;
+            updates["/transactions/" + txKey] = {
+                fromUID: "LUCKY_WHEEL_PRIZE",
+                toUID: activeUser.uid,
+                amount: prize.value,
+                type: "Wheel Win",
+                timestamp: Date.now()
+            };
+
+            rtdb.ref().update(updates).then(() => {
+                iconElem.innerText = "💰";
+                headElem.innerText = "অভিনন্দন! আপনি জিতেছেন!";
+                valElem.innerText = `+ ৳ ${prize.value}.০০`;
+                valElem.style.color = "#2ed573";
+                msgElem.innerText = "পুরস্কারের অর্থ সরাসরি আপনার মূল অ্যাকাউন্টে যোগ করা হয়েছে।";
+                triggerConfettiParticles();
+                openModalWindow("modalRewardResult");
+            });
+
+        } else if (prize.type === "return") {
+            // Return Spin: DO NOT deduct spins! User gets to spin again immediately!
+            iconElem.innerText = "🔄";
+            headElem.innerText = "রিটার্ন স্পিন (Free Spin)!";
+            valElem.innerText = "ফ্রি রি-স্পিন";
+            valElem.style.color = "#38bdf8";
+            msgElem.innerText = "আপনার স্পিন সংখ্যা কাটা হয়নি! আপনি আবার বিনামূল্যে স্পিন করতে পারবেন।";
+            openModalWindow("modalRewardResult");
+
+        } else {
+            // Try Again (Zero)
+            const newSpins = activeUser.freeSpins - 1;
+            rtdb.ref("users/" + activeUser.uid).update({ freeSpins: newSpins }).then(() => {
+                iconElem.innerText = "😢";
+                headElem.innerText = "দুর্ভাগ্যবশত!";
+                valElem.innerText = "০ ৳ (Try Again)";
+                valElem.style.color = "#ef4444";
+                msgElem.innerText = "এবার কোনো পুরস্কার মেলেনি। পুনরায় চেষ্টা করুন!";
+                openModalWindow("modalRewardResult");
+            });
+        }
+    }
+
+    function closeRewardModal() {
+        closeModalWindow("modalRewardResult");
+    }
+
+    // 10. Lightweight Confetti Particle Animation
+    function triggerConfettiParticles() {
+        const c = document.getElementById("confettiCanvas");
+        const cCtx = c.getContext("2d");
+        c.width = window.innerWidth;
+        c.height = window.innerHeight;
+
+        const particles = [];
+        const colors = ["#ffd700", "#ff4757", "#2ed573", "#00d2d3", "#ff9f43"];
+
+        for (let i = 0; i < 70; i++) {
+            particles.push({
+                x: c.width / 2,
+                y: c.height / 2,
+                r: Math.random() * 6 + 3,
+                d: Math.random() * 50 + 10,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                tilt: Math.floor(Math.random() * 10) - 10,
+                tiltAngleIncremental: (Math.random() * 0.07) + 0.05,
+                tiltAngle: 0,
+                vx: (Math.random() - 0.5) * 12,
+                vy: (Math.random() - 0.5) * 12 - 4
+            });
+        }
+
+        let animationFrame = 0;
+        function renderConfetti() {
+            cCtx.clearRect(0, 0, c.width, c.height);
+            particles.forEach((p) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.25; // Gravity
+                p.tiltAngle += p.tiltAngleIncremental;
+                p.tilt = Math.sin(p.tiltAngle) * 15;
+
+                cCtx.beginPath();
+                cCtx.lineWidth = p.r;
+                cCtx.strokeStyle = p.color;
+                cCtx.moveTo(p.x + p.tilt + p.r / 2, p.y);
+                cCtx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
+                cCtx.stroke();
+            });
+
+            animationFrame++;
+            if (animationFrame < 130) {
+                requestAnimationFrame(renderConfetti);
+            } else {
+                cCtx.clearRect(0, 0, c.width, c.height);
+            }
+        }
+        renderConfetti();
+    }
+
+    // 11. Winner Ticker Live Simulation
+    function cycleWinnerTicker() {
+        const ticker = document.getElementById("liveWinnerTickerText");
+        if (!ticker) return;
+        const prefix = ["018", "017", "019", "016"][Math.floor(Math.random() * 4)];
+        const phone = `${prefix}***${Math.floor(100 + Math.random() * 900)}`;
+        const isReturn = Math.random() > 0.65;
+        if (isReturn) {
+            ticker.innerHTML = `Member <strong>${phone}</strong> won <strong>🔄 Return Spin</strong> in Lucky Wheel!`;
+        } else {
+            ticker.innerHTML = `Member <strong>${phone}</strong> won <strong>৳ ১০.০০</strong> in Lucky Wheel!`;
+        }
+    }
+</script>
+</body>
+</html>
